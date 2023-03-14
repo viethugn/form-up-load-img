@@ -6,14 +6,20 @@ class UploadImage
   private $target_dir;
   private $fileToUpload;
   private $uploadOk;
+  private $uploadName; 
+  private $uploadTmp_name; 
+  private $uploadSize;
 
-  function __construct($target_file, $imageFileType, $target_dir, $fileToUpload, $uploadOk)
+  function __construct($target_file, $imageFileType, $target_dir, $fileToUpload, $uploadOk, $uploadName, $uploadTmp_name, $uploadSize)
   {
     $this->target_file = $target_file;
     $this->imageFileType = $imageFileType;
     $this->target_dir = $target_dir;
     $this->fileToUpload = $fileToUpload;
     $this->uploadOk = $uploadOk;
+    $this->uploadName = $uploadName;
+    $this->uploadTmp_name = $uploadTmp_name; 
+    $this->uploadSize = $uploadSize;
   }
 
   function get_target_file()
@@ -58,7 +64,7 @@ class UploadImage
 
   public function countNameInFileToUpload()
   {
-    $countArr = count($_FILES["$this->fileToUpload"]["name"]);
+    $countArr = count($this->fileToUpload["$this->uploadName"]);
     return $countArr;
   }
 
@@ -66,63 +72,37 @@ class UploadImage
   {
     // Check if image file is empty
     for ($i = 0; $i < 1; $i++) {
-      if ($_FILES["$this->fileToUpload"]["name"][$i] == "") {
+      if ($this->fileToUpload["$this->uploadName"][$i] == "") {
         return true;
       }
     }
     return false;
   }
 
-  // public function checkInputImageWhenSubmit()
-  // {
-  //   for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
-  //     $check = getimagesize($_FILES["$this->fileToUpload"]["tmp_name"][$i]);
-  //     // echo var_dump($check);
-  //     if ($check !== false) {
-  //       // echo "<br><br>File ảnh là - " . $check["mime"]. ".";
-  //       $this->uploadOk = 1;
-  //     } else {
-  //       echo "<br><br>File " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " không phải là file hình!.";
-  //       $this->uploadOk = 0;
-  //     }
-  //   }
-  // }
 
-  // public function sumSizeAllFileInput($fx, $fy) {
-  //   return $fx + $fy;
-  // }
 
   public function checkFileSize ()
   {
-    $sumfile = array_reduce($_FILES["$this->fileToUpload"]["size"], function ($fx, $fy) {
-      return $fx + $fy;
-    }, 0);
-    // Check file size
-    if ($sumfile > 5242880) {
-      echo "<br><br>Thông báo!, tổng dung lượng file bạn đưa vào vượt quá 5MB!";
-      $this->uploadOk = 0;
+    for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
+      // Check file size
+      if ($this->fileToUpload["$this->uploadSize"][$i] > 5242880) {
+        echo "<br><br>Thông báo!, dung lượng file  " . htmlspecialchars(basename($this->fileToUpload["$this->uploadName"][$i])) . "  bạn đưa vào vượt quá 5MB!";
+        $this->uploadOk = 0;
+      }
     }
+
   }
 
   public function checkTypeImage ()
   {
-    // Allow certain file formats
     $checkwhenfailtype = 1;
     
     for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
-      // $check = getimagesize($_FILES["$this->fileToUpload"]["tmp_name"][$i]);
-      // if ($check !== false) {
-      //   // echo "<br><br>File ảnh là - " . $check["mime"]. ".";
-      //   $this->uploadOk = 1;
-      // } else {
-      //   echo "<br><br>File " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " không phải là file hình!.";
-      //   $this->uploadOk = 0;
-      // }
       if (
-        $this->get_imageFileType()[$i] != "jpg" && $this->get_imageFileType()[$i] != "png" && $this->get_imageFileType()[$i] != "jpeg"
-        && $this->get_imageFileType()[$i] != "gif"
+        $this->imageFileType[$i] != "jpg" && $this->imageFileType[$i] != "png" && $this->imageFileType[$i] != "jpeg"
+        && $this->imageFileType[$i] != "gif"
       ) {
-        echo "<br><br>Thông báo!, file " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " này không đúng định dạng!";
+        echo "<br><br>Thông báo!, file " . htmlspecialchars(basename($this->fileToUpload["$this->uploadName"][$i])) . " này không đúng định dạng!";
         $this->uploadOk = 0;
         $checkwhenfailtype = 0;
       }
@@ -136,8 +116,9 @@ class UploadImage
   {
     // Check if file already exists
     for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
-      if (file_exists($this->get_target_file()[$i])) {
-        echo "<br><br>Thông báo!, file " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " này đã tồn tại!";
+      if (file_exists($this->target_file[$i])) {
+        echo "<br><br>Thông báo!, file " . htmlspecialchars(basename($this->fileToUpload["$this->uploadName"][$i])) . " này đã tồn tại!";
+        $this->fileToUpload["error"][$i] = "<br><br>Thông báo!, file " . htmlspecialchars(basename($this->fileToUpload["$this->uploadName"][$i])) . " này đã tồn tại!";
         $this->uploadOk = 0;
       }
     }
@@ -153,69 +134,51 @@ class UploadImage
 
   public function uploadOkToUpload()
   {
-    // $countArr = count($_FILES["$this->fileToUpload"]["name"]);
     if ($this->get_uploadOk() == 1) {
       for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
-        $check = getimagesize($_FILES["$this->fileToUpload"]["tmp_name"][$i]);
+        $check = getimagesize($this->fileToUpload["$this->uploadTmp_name"][$i]);
         if ($check !== false) {
-          // echo "<br><br>File ảnh là - " . $check["mime"]. ".";
-          if (move_uploaded_file($_FILES["$this->fileToUpload"]["tmp_name"][$i], $this->get_target_file()[$i])) {
-            echo "<br><br>File " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " đã được tải lên!";
+          if (move_uploaded_file($this->fileToUpload["$this->uploadTmp_name"][$i], $this->target_file[$i])) {
+            echo "<br><br>File " . htmlspecialchars(basename($this->fileToUpload["$this->uploadName"][$i])) . " đã được tải lên!";
           } else {
-            echo "<br><br><strong class='text-blue-300'>Thông báo1, file ảnh " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " khi tải lên có sự cố!.</strong>";
+            echo "<br><br><strong class='text-blue-300'>Thông báo1, file ảnh " . htmlspecialchars(basename($this->fileToUpload["$this->uploadName"][$i])) . " khi tải lên có sự cố!.</strong>";
           }
         } else {
-          echo "<br><br>File " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " không phải là file hình!.";
+          echo "<br><br>File " . htmlspecialchars(basename($this->fileToUpload["$this->uploadName"][$i])) . " không phải là file hình!.";
           $this->uploadOk = 0;
         }
       }
     }
   }
 
-  //Count image in dir
-  // public function countImage()
-  // {
-  //   $total_files = 0;
-  //   if (is_dir($this->get_target_dir())) {
-  //     $dp = opendir($this->get_target_dir());
-  //     if ($dp) {
-  //       while (($filename = readdir($dp)) == true) {
-  //         if (($filename != ".") && ($filename != "..")) {
-  //           $total_files++;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return $total_files;
-  // }
-
-  // public function checkCountFileImgInDir()
-  // {
-  //   if ($this->countImage() >= 5) {
-  //     return true;
-  //   }
-  //   return false;
-  // }
 }
 
 
 //when event is submit
-if (isset($_POST["submit"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  if (isset($_POST["submit"])) {
 
-  $target_dir = "uploads/";
-  $fileToUpload = "fileToUpload";
-  $uploadOk = 1;
+    $target_dir = "uploads/";
+    $fileToUpload = $_FILES["fileToUpload"];
+    $uploadName = "name";
+    $uploadTmp_name = "tmp_name";
+    $uploadSize = "size";
 
-  $countArr = count($_FILES["$fileToUpload"]["name"]);
-  $target_file = array();
-  $imageFileType = array();
-
-  for ($i = 0; $i < $countArr; $i++) {
-    array_push($target_file, $target_dir . basename($_FILES["$fileToUpload"]["name"][$i]));
-    array_push($imageFileType, strtolower(pathinfo($target_file[$i], PATHINFO_EXTENSION)));
-  }
+    $uploadOk = 1;
+    $target_file = array();
+    $imageFileType = array();
   
-  //Create new object
-  $uploadimg = new UploadImage($target_file, $imageFileType, $target_dir, $fileToUpload, $uploadOk);
-  $uploadimg->init();
+    $countArr = count($fileToUpload["$uploadName"]);
+  
+    for ($i = 0; $i < $countArr; $i++) {
+      array_push($target_file, $target_dir . basename($fileToUpload["$uploadName"][$i]));
+      array_push($imageFileType, strtolower(pathinfo($target_file[$i], PATHINFO_EXTENSION)));
+    }
+    
+    // Create new object
+    $uploadimg = new UploadImage($target_file, $imageFileType, $target_dir, $fileToUpload, $uploadOk, $uploadName, $uploadTmp_name, $uploadSize);
+    $uploadimg->init();
+
+    // var_dump($_FILES["fileToUpload"]["error"]);
+  }
 }
