@@ -48,10 +48,10 @@ class UploadImage
     if ($this->checkNoInputImageWhenSubmit()) { //check input empty
       echo "<br><br>Bạn chưa chọn tệp!";
     } else {
-      $this->checkFileSize();// Check file size
-      $this->checkFileExist();// Check file exist
-      $this->checkTypeImage();// Check style file
-      $this->checkNumInputFile();// Check num file when input & click submit
+      $this->checkFileSize(); // Check file size
+      $this->checkFileExist(); // Check file exist
+      $this->checkTypeImage(); // Check style file
+      $this->checkNumInputFile(); // Check num file when input & click submit
       $this->uploadOkToUpload(); // Check file when all validate
     }
   }
@@ -73,23 +73,26 @@ class UploadImage
     return false;
   }
 
-  public function checkInputImageWhenSubmit()
-  {
-    $check = getimagesize($_FILES["$this->fileToUpload"]["tmp_name"]);
-    if ($check !== false) {
-      echo "<br><br>File ảnh là - " . $check["mime"] . ".";
-      // $this->uploadOk = 1;
-    } else {
-      echo "<br><br>File không phải là file hình!.";
-      // $this->uploadOk = 0;
-    }
-  }
+  // public function checkInputImageWhenSubmit()
+  // {
+  //   for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
+  //     $check = getimagesize($_FILES["$this->fileToUpload"]["tmp_name"][$i]);
+  //     // echo var_dump($check);
+  //     if ($check !== false) {
+  //       // echo "<br><br>File ảnh là - " . $check["mime"]. ".";
+  //       $this->uploadOk = 1;
+  //     } else {
+  //       echo "<br><br>File " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " không phải là file hình!.";
+  //       $this->uploadOk = 0;
+  //     }
+  //   }
+  // }
 
   // public function sumSizeAllFileInput($fx, $fy) {
   //   return $fx + $fy;
   // }
 
-  public function checkFileSize()
+  public function checkFileSize ()
   {
     $sumfile = array_reduce($_FILES["$this->fileToUpload"]["size"], function ($fx, $fy) {
       return $fx + $fy;
@@ -101,16 +104,25 @@ class UploadImage
     }
   }
 
-  public function checkTypeImage()
+  public function checkTypeImage ()
   {
     // Allow certain file formats
     $checkwhenfailtype = 1;
+    
     for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
+      // $check = getimagesize($_FILES["$this->fileToUpload"]["tmp_name"][$i]);
+      // if ($check !== false) {
+      //   // echo "<br><br>File ảnh là - " . $check["mime"]. ".";
+      //   $this->uploadOk = 1;
+      // } else {
+      //   echo "<br><br>File " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " không phải là file hình!.";
+      //   $this->uploadOk = 0;
+      // }
       if (
         $this->get_imageFileType()[$i] != "jpg" && $this->get_imageFileType()[$i] != "png" && $this->get_imageFileType()[$i] != "jpeg"
         && $this->get_imageFileType()[$i] != "gif"
       ) {
-        echo "<br><br>Thông báo!, tệp " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " này không đúng định dạng!";
+        echo "<br><br>Thông báo!, file " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " này không đúng định dạng!";
         $this->uploadOk = 0;
         $checkwhenfailtype = 0;
       }
@@ -125,7 +137,7 @@ class UploadImage
     // Check if file already exists
     for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
       if (file_exists($this->get_target_file()[$i])) {
-        echo "<br><br>Thông báo!, tệp " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " này đã tồn tại!";
+        echo "<br><br>Thông báo!, file " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " này đã tồn tại!";
         $this->uploadOk = 0;
       }
     }
@@ -141,13 +153,20 @@ class UploadImage
 
   public function uploadOkToUpload()
   {
-    $countArr = count($_FILES["$this->fileToUpload"]["name"]);
+    // $countArr = count($_FILES["$this->fileToUpload"]["name"]);
     if ($this->get_uploadOk() == 1) {
-      for ($i = 0; $i < $countArr; $i++) {
-        if (move_uploaded_file($_FILES["$this->fileToUpload"]["tmp_name"][$i], $this->get_target_file()[$i])) {
-          echo "<br><br>Tệp " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " đã được tải lên!";
+      for ($i = 0; $i < $this->countNameInFileToUpload(); $i++) {
+        $check = getimagesize($_FILES["$this->fileToUpload"]["tmp_name"][$i]);
+        if ($check !== false) {
+          // echo "<br><br>File ảnh là - " . $check["mime"]. ".";
+          if (move_uploaded_file($_FILES["$this->fileToUpload"]["tmp_name"][$i], $this->get_target_file()[$i])) {
+            echo "<br><br>File " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " đã được tải lên!";
+          } else {
+            echo "<br><br><strong class='text-blue-300'>Thông báo1, file ảnh " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " khi tải lên có sự cố!.</strong>";
+          }
         } else {
-          echo "<br><br><strong class='text-blue-300'>Thông báo1, file ảnh " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " khi tải lên có sự cố!.</strong>";
+          echo "<br><br>File " . htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"][$i])) . " không phải là file hình!.";
+          $this->uploadOk = 0;
         }
       }
     }
@@ -195,6 +214,7 @@ if (isset($_POST["submit"])) {
     array_push($target_file, $target_dir . basename($_FILES["$fileToUpload"]["name"][$i]));
     array_push($imageFileType, strtolower(pathinfo($target_file[$i], PATHINFO_EXTENSION)));
   }
+  
   //Create new object
   $uploadimg = new UploadImage($target_file, $imageFileType, $target_dir, $fileToUpload, $uploadOk);
   $uploadimg->init();
