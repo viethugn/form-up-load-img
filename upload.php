@@ -43,15 +43,15 @@ class UploadImage
 
   public function startAll()
   {
-    if ($this->checkNoInputImageWhenSubmit() === true) { //check input empty
+    if ($this->checkNoInputImageWhenSubmit()) { //check input empty
       echo "<br><br>Bạn chưa chọn tệp!";
-    } elseif ($this->checkFileExist() === true) { //check file exist
-      echo "<br><br>Thông báo, tệp này đã tồn tại!";
+    } elseif ($this->checkFileExist()) { //check file exist
+      echo "<br><br>Thông báo, tệp ". htmlspecialchars(basename($_FILES["$this->fileToUpload"]["name"])) ." này đã tồn tại!";
     } elseif ($this->checkFileSize()) {
-      echo "<br><br>Thông báo, file bạn đưa vào lớn hơn 5MB!";
-    } elseif ($this->checkTypeImage() === true) { //check type is type img
+      echo "<br><br>Thông báo, file bạn đưa vào vượt quá 5MB!";
+    } elseif ($this->checkTypeImage()) { //check type is type img
       echo "<br><br>Thông báo, chỉ cho phép các file có định dạng sau JPG, JPEG, PNG & GIF";
-    } elseif ($this->checkCountFileImgInDir() === true) { //check dir <=5
+    } elseif ($this->checkCountFileImgInDir()) { //check dir <=5
       echo "<br><br>Số lượng tệp đã đầy";
     } else {
       $this->checkInputImageWhenSubmit();
@@ -83,7 +83,7 @@ class UploadImage
   public function checkFileSize()
   {
     // Check file size
-    if ($_FILES["$this->fileToUpload"]["size"] > 5120) {
+    if ($_FILES["$this->fileToUpload"]["size"] > 5242880) {
       // $this->uploadOk = 0;
       return true;
     }
